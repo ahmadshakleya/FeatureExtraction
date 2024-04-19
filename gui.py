@@ -22,8 +22,6 @@ class App1:
         self.root.title('CellBlend App')
         self.root.geometry('800x600')
 
-        logging.info("Application started")  # Log the start of the application
-
         self.tab_group = ttk.Notebook(root)
         self.tab_group.pack(expand=1, fill="both")
 
@@ -84,6 +82,8 @@ class App1:
         self.image_paths = []
         self.photo_image = None  # To hold the PhotoImage reference
         self.current_image = None  # To hold the current PIL image
+
+        logging.info("Application started")  # Log the start of the application
 
     def select_images(self):
         self.image_paths = filedialog.askopenfilenames(
