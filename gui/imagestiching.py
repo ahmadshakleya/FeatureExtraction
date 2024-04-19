@@ -41,14 +41,15 @@ def stitch_images(img1, img2):
 
     return result
 
-# Load images
-image1 = cv2.imread('images/1.jpg')
-image2 = cv2.imread('images/2.jpg')
+if __name__ == '__main__':
+    # Load images
+    image1 = cv2.imread('images/1.jpg')
+    image2 = cv2.imread('images/2.jpg')
 
-# Stitch images
-result = stitch_images(image1, image2)
+    # Stitch images
+    result = stitch_images(image1, image2)
 
-# Save or show the result
-cv2.imshow('Stitched Image', result)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
+    # Save or show the result
+    cv2.imshow('Stitched Image', result)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
