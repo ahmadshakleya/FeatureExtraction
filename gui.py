@@ -1,11 +1,47 @@
 import tkinter as tk
-from tkinter import ttk
+from tkinter import Toplevel, ttk
 from tkinter import filedialog, Canvas, PhotoImage, scrolledtext
 from PIL import Image, ImageTk
 import logging
 import cv2
 import tryouts.Ahmad.MultipleImageStitch as mis  # Importing your module
 import tryouts.Ahmad.TextHandler as th  # Importing your module
+import time
+
+class SplashScreen(Toplevel):
+    def __init__(self, master, on_close_callback, image_path):
+        super().__init__(master)
+        self.on_close_callback = on_close_callback
+        self.title('Loading...')
+        self.geometry('800x600')  # Adjust size to fit your image if needed
+        self.configure(bg='white')
+
+        # Load the image
+        self.image = Image.open(image_path)
+        self.photo_image = ImageTk.PhotoImage(self.image)
+
+        # Display the image in a label
+        self.label_image = ttk.Label(self, image=self.photo_image)
+        self.label_image.pack(pady=20)
+
+        # Optional: Add a text label below the image
+        self.label_text = ttk.Label(self, text="Loading, please wait...", background='white')
+        self.label_text.pack(expand=True)
+
+        # Progress bar at the bottom
+        self.progress = ttk.Progressbar(self, orient="horizontal", length=100, mode='determinate')
+        self.progress.pack(expand=True, padx=20, pady=20)
+
+        # Start updating the progress bar
+        self.after(100, self.update_progress, 0)
+
+    def update_progress(self, value):
+        if value <= 100:
+            self.progress['value'] = value
+            self.after(100, self.update_progress, value+1)
+        else:
+            self.destroy()  # Close the splash screen
+            self.on_close_callback()  # Call the callback function
 
 def setup_logging(text_widget):
     # Set the logger to handle and format messages
@@ -19,10 +55,16 @@ def setup_logging(text_widget):
 class App1:
     def __init__(self, root):
         self.root = root
+        self.root.withdraw()  # Hide main window during splash screen
+        self.splash = SplashScreen(self.root, self.initialize_ui, image_path="image.jpg")
+
+    def initialize_ui(self):
+        """Initialize the main window UI after the splash screen closes."""
+        self.root.deiconify()  # Show the main window
         self.root.title('CellBlend App')
         self.root.geometry('800x600')
 
-        self.tab_group = ttk.Notebook(root)
+        self.tab_group = ttk.Notebook(self.root)
         self.tab_group.pack(expand=1, fill="both")
 
         self.file_tab = ttk.Frame(self.tab_group)
