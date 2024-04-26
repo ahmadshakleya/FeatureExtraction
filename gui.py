@@ -6,7 +6,7 @@ import logging
 import cv2
 import tryouts.Ahmad.MultipleImageStitch as mis  # Importing your module
 import tryouts.Ahmad.TextHandler as th  # Importing your module
-import time
+import time # Importing Time module
 
 class SplashScreen(Toplevel):
     def __init__(self, master, on_close_callback, image_path):
