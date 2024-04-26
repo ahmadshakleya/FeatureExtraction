@@ -6,6 +6,7 @@ import logging
 import cv2
 import tryouts.Ahmad.MultipleImageStitch as mis  # Importing your module
 import tryouts.Ahmad.TextHandler as th  # Importing your module
+import time # Importing Time module
 import time
 import fitz  # PyMuPDF
 
