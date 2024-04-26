@@ -17,6 +17,7 @@ class SplashScreen(Toplevel):
         self.on_close_callback = on_close_callback
         self.title('Loading...')
         self.geometry('800x600')  # Adjust size to fit your image if needed
+        center_window(self)  # Center the splash screen
         self.configure(bg='white')
 
         # Load the image
@@ -55,6 +56,15 @@ def setup_logging(text_widget):
     logger.addHandler(log_handler)
     return logger
 
+def center_window(window):
+        window.update_idletasks()  # Updates the window to get an accurate size
+        width = window.winfo_width()
+        height = window.winfo_height()
+        x = (window.winfo_screenwidth() // 2) - (width // 2)
+        y = (window.winfo_screenheight() // 2) - (height // 2)
+        window.geometry(f'{width}x{height}+{x}+{y}')
+
+
 class App1:
     def __init__(self, root):
         self.root = root
@@ -66,6 +76,7 @@ class App1:
         self.root.deiconify()  # Show the main window
         self.root.title('CellBlend App')
         self.root.geometry('800x600')
+        center_window(self.root)  # Center the main window
 
         self.tab_group = ttk.Notebook(self.root)
         self.tab_group.pack(expand=1, fill="both")
@@ -119,7 +130,8 @@ class App1:
 
         # Setup in Insert Tab for selecting multiple images and stitching
         ttk.Button(self.insert_tab, text="Select Images", command=self.select_images).pack(pady=10)
-        ttk.Button(self.insert_tab, text="Stitch Images", command=self.stitch_images_wrapper).pack(pady=10)
+        self.stitch_button = ttk.Button(self.insert_tab, text="Stitch Images", command=self.stitch_images_wrapper, state=tk.DISABLED)
+        self.stitch_button.pack(pady=10)
 
         # Scrollable area for displaying images
         self.image_canvas = Canvas(self.insert_tab, bg='white')
@@ -142,7 +154,7 @@ class App1:
         self.delete_button.pack_forget()  # Hide the button initially
 
         self.display_keypoints = False  # Track the state of keypoints display
-        self.toggle_keypoints_button = ttk.Button(self.insert_tab, text="Toggle Keypoints", command=self.toggle_keypoints)
+        self.toggle_keypoints_button = ttk.Button(self.insert_tab, text="Toggle Keypoints", command=self.toggle_keypoints, state=tk.DISABLED)
         self.toggle_keypoints_button.pack(pady=10)
 
         self.image_paths = []
@@ -214,6 +226,14 @@ class App1:
             self.status_label.config(text=f"Selected {len(self.image_paths)} images.")
             logging.info(f"Selected {len(self.image_paths)} images for stitching.")
             self.display_selected_images()  # Display each selected image
+            self.toggle_keypoints_button['state'] = tk.NORMAL  # Enable if images are selected
+            if len(self.image_paths) > 1:
+                self.stitch_button['state'] = tk.NORMAL  # Enable if more than one image
+            else:
+                self.stitch_button['state'] = tk.DISABLED  # Disable if not enough images
+        else:
+            self.toggle_keypoints_button['state'] = tk.DISABLED  # Disable if no images are selected
+            self.stitch_button['state'] = tk.DISABLED  # Disable if no images are selected
 
     def delete_selected_image(self):
         if hasattr(self, 'selected_image_index') and self.selected_image_index is not None:
