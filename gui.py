@@ -6,7 +6,6 @@ import logging
 import cv2
 import tryouts.Ahmad.MultipleImageStitch as mis  # Importing your module
 import tryouts.Ahmad.TextHandler as th  # Importing your module
-import time # Importing Time module
 import time
 import fitz  # PyMuPDF
 
@@ -116,15 +115,33 @@ class App1:
         self.save_button = ttk.Button(self.view_tab, text="Save Stitched Image", command=self.save_image)
         self.save_button.pack(pady=10)
 
-        # Setup in Insert Tab for selecting multiple images and stitching
+                # Setup in Insert Tab for selecting multiple images and stitching
         ttk.Button(self.insert_tab, text="Select Images", command=self.select_images).pack(pady=10)
         ttk.Button(self.insert_tab, text="Stitch Images", command=self.stitch_images_wrapper).pack(pady=10)
+
+        # Scrollable area for displaying images
+        self.image_canvas = Canvas(self.insert_tab, bg='white')
+        self.image_scrollbar = ttk.Scrollbar(self.insert_tab, orient="vertical", command=self.image_canvas.yview)
+        self.scrollable_frame = ttk.Frame(self.image_canvas)
+
+        self.image_scrollable_window = self.image_canvas.create_window((0, 0), window=self.scrollable_frame, anchor="nw")
+        self.image_canvas.configure(yscrollcommand=self.image_scrollbar.set)
+        self.image_scrollbar.pack(side="right", fill="y")
+        self.image_canvas.pack(side="left", fill="both", expand=True)
+
+        self.scrollable_frame.bind("<Configure>", lambda e: self.image_canvas.configure(scrollregion=self.image_canvas.bbox("all")))
 
         self.status_label = ttk.Label(self.insert_tab, text="Select images to start stitching.")
         self.status_label.pack(pady=20)
 
+        # Delete button initialization
+        self.delete_button = ttk.Button(self.insert_tab, text="Delete Image", command=self.delete_selected_image)
+        self.delete_button.pack(pady=10)
+        self.delete_button.pack_forget()  # Hide the button initially
+
         self.image_paths = []
         self.photo_image = None  # To hold the PhotoImage reference
+        self.photo_images = []  # Initialize in the __init__ method
         self.current_image = None  # To hold the current PIL image
 
         self.setup_help_tab()
@@ -139,6 +156,59 @@ class App1:
         if self.image_paths:
             self.status_label.config(text=f"Selected {len(self.image_paths)} images.")
             logging.info(f"Selected {len(self.image_paths)} images for stitching.")
+            self.display_selected_images()  # Display each selected image
+
+    def display_selected_images(self):
+        # Clear the frame first
+        for widget in self.scrollable_frame.winfo_children():
+            widget.destroy()
+
+        self.photo_images = []  # Reset or initialize the list to store image references
+        for i, path in enumerate(self.image_paths):
+            img = Image.open(path)
+            photo = ImageTk.PhotoImage(img)
+            self.photo_images.append(photo)  # Keep the reference to avoid garbage collection
+            label = ttk.Label(self.scrollable_frame, image=photo)
+            label.image = photo  # Keep another reference, required by Tkinter to display the image
+            label.pack(pady=10)  # Pack each image with some padding
+            label.bind("<Button-1>", lambda e, index=i: self.select_image(e, index))
+
+        # Redraw the canvas
+        self.image_canvas.yview_moveto(0)  # Scrolls back to the top after updating
+
+    def select_image(self, event, index):
+        """Highlight the selected image and prepare for possible deletion."""
+        # Highlight the selected image
+        for label in self.scrollable_frame.winfo_children():
+            label.configure(relief=tk.FLAT)  # Reset relief of all images
+        event.widget.configure(relief=tk.RAISED)  # Highlight the clicked label
+        self.selected_image_index = index  # Save the index of the selected image
+        
+        # Show the 'Delete' button if not already visible
+        if not self.delete_button.winfo_ismapped():
+            self.delete_button.pack(pady=10)
+
+    def select_images(self):
+        image_paths_tuple = filedialog.askopenfilenames(
+            title="Select images",
+            filetypes=(("JPEG Files", "*.jpg;*.jpeg"), ("PNG Files", "*.png"), ("All files", "*.*"))
+        )
+        self.image_paths = list(image_paths_tuple)  # Convert tuple to list
+        if self.image_paths:
+            self.status_label.config(text=f"Selected {len(self.image_paths)} images.")
+            logging.info(f"Selected {len(self.image_paths)} images for stitching.")
+            self.display_selected_images()  # Display each selected image
+
+    def delete_selected_image(self):
+        if hasattr(self, 'selected_image_index') and self.selected_image_index is not None:
+            # Remove the selected image from the list
+            del self.image_paths[self.selected_image_index]
+            del self.photo_images[self.selected_image_index]
+            self.display_selected_images()  # Redisplay the images
+            self.delete_button.pack_forget()  # Hide the delete button
+            self.selected_image_index = None  # Reset the selected index
+            self.status_label.config(text=f"Updated selection. {len(self.image_paths)} images remain.")
+            logging.info("Image deleted successfully.")
 
     def stitch_images_wrapper(self):
         if not self.image_paths:
