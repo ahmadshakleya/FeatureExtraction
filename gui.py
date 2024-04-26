@@ -8,6 +8,8 @@ import tryouts.Ahmad.MultipleImageStitch as mis  # Importing your module
 import tryouts.Ahmad.TextHandler as th  # Importing your module
 import time
 import fitz  # PyMuPDF
+from tryouts.Ken.FeatureDetectionFunction import process_image_with_keypoints
+
 
 class SplashScreen(Toplevel):
     def __init__(self, master, on_close_callback, image_path):
@@ -115,7 +117,7 @@ class App1:
         self.save_button = ttk.Button(self.view_tab, text="Save Stitched Image", command=self.save_image)
         self.save_button.pack(pady=10)
 
-                # Setup in Insert Tab for selecting multiple images and stitching
+        # Setup in Insert Tab for selecting multiple images and stitching
         ttk.Button(self.insert_tab, text="Select Images", command=self.select_images).pack(pady=10)
         ttk.Button(self.insert_tab, text="Stitch Images", command=self.stitch_images_wrapper).pack(pady=10)
 
@@ -139,6 +141,10 @@ class App1:
         self.delete_button.pack(pady=10)
         self.delete_button.pack_forget()  # Hide the button initially
 
+        self.display_keypoints = False  # Track the state of keypoints display
+        self.toggle_keypoints_button = ttk.Button(self.insert_tab, text="Toggle Keypoints", command=self.toggle_keypoints)
+        self.toggle_keypoints_button.pack(pady=10)
+
         self.image_paths = []
         self.photo_image = None  # To hold the PhotoImage reference
         self.photo_images = []  # Initialize in the __init__ method
@@ -148,6 +154,10 @@ class App1:
 
         logging.info("Application started")  # Log the start of the application
 
+    def toggle_keypoints(self):
+        self.display_keypoints = not self.display_keypoints
+        self.display_selected_images()
+    
     def select_images(self):
         self.image_paths = filedialog.askopenfilenames(
             title="Select images",
@@ -164,17 +174,23 @@ class App1:
             widget.destroy()
 
         self.photo_images = []  # Reset or initialize the list to store image references
+
         for i, path in enumerate(self.image_paths):
             img = Image.open(path)
+            if self.display_keypoints:
+                img = process_image_with_keypoints(img, draw_keypoints=True)
+            else:
+                img = process_image_with_keypoints(img, draw_keypoints=False)
+
             photo = ImageTk.PhotoImage(img)
             self.photo_images.append(photo)  # Keep the reference to avoid garbage collection
             label = ttk.Label(self.scrollable_frame, image=photo)
             label.image = photo  # Keep another reference, required by Tkinter to display the image
             label.pack(pady=10)  # Pack each image with some padding
-            label.bind("<Button-1>", lambda e, index=i: self.select_image(e, index))
+            label.bind("<Button-1>", lambda e, index=i: self.select_image(e, index))  # Bind click event
 
-        # Redraw the canvas
         self.image_canvas.yview_moveto(0)  # Scrolls back to the top after updating
+
 
     def select_image(self, event, index):
         """Highlight the selected image and prepare for possible deletion."""
