@@ -6,7 +6,9 @@ import logging
 import cv2
 import tryouts.Ahmad.MultipleImageStitch as mis  # Importing your module
 import tryouts.Ahmad.TextHandler as th  # Importing your module
+import time # Importing Time module
 import time
+import fitz  # PyMuPDF
 
 class SplashScreen(Toplevel):
     def __init__(self, master, on_close_callback, image_path):
@@ -33,12 +35,12 @@ class SplashScreen(Toplevel):
         self.progress.pack(expand=True, padx=20, pady=20)
 
         # Start updating the progress bar
-        self.after(100, self.update_progress, 0)
+        self.after(10, self.update_progress, 0)
 
     def update_progress(self, value):
-        if value <= 100:
+        if value <= 10:
             self.progress['value'] = value
-            self.after(100, self.update_progress, value+1)
+            self.after(10, self.update_progress, value+1)
         else:
             self.destroy()  # Close the splash screen
             self.on_close_callback()  # Call the callback function
@@ -125,6 +127,8 @@ class App1:
         self.photo_image = None  # To hold the PhotoImage reference
         self.current_image = None  # To hold the current PIL image
 
+        self.setup_help_tab()
+
         logging.info("Application started")  # Log the start of the application
 
     def select_images(self):
@@ -196,6 +200,83 @@ class App1:
                 logging.info("Save image operation cancelled.")
         else:
             logging.warning("No image to save.")
+
+    def setup_help_tab(self):
+        # Creating a frame for navigation buttons
+        button_frame = ttk.Frame(self.help_tab)
+        button_frame.pack(side='top', fill='x', pady=10)  # Pack the button frame at the top
+
+        # Navigation buttons within the button frame
+        self.prev_button = ttk.Button(button_frame, text="Previous", command=self.goto_previous_page)
+        self.prev_button.pack(side='left', padx=10)
+
+        self.next_button = ttk.Button(button_frame, text="Next", command=self.goto_next_page)
+        self.next_button.pack(side='right', padx=10)
+
+        # Creating a frame for the PDF canvas
+        pdf_frame = ttk.Frame(self.help_tab)
+        pdf_frame.pack(side='top', fill='both', expand=True)  # Ensure PDF frame fills the rest of the space
+
+        # Creating the canvas within the frame
+        self.pdf_canvas = Canvas(pdf_frame, bg='white')
+        self.pdf_canvas.pack(side='top', fill='both', expand=True)
+        self.pdf_canvas.bind("<Configure>", self.on_canvas_resize)
+
+        self.load_pdf("docs_test.pdf")
+
+        # Initial state of navigation buttons
+        self.update_buttons()
+
+
+    def load_pdf(self, file_path):
+        self.doc = fitz.open(file_path)
+        self.current_page_number = 0
+        self.display_page(self.current_page_number)
+
+    def display_page(self, page_number):
+        page = self.doc.load_page(page_number)
+        self.render_page(page)
+        self.update_buttons()  # Update button states each time the page is changed
+
+    def render_page(self, page):
+        # Calculate scale factors based on the current canvas size
+        canvas_width = self.pdf_canvas.winfo_width()
+        canvas_height = self.pdf_canvas.winfo_height()
+
+        # Get page dimensions to calculate the scaling factor
+        page_rect = page.rect
+        scale_x = canvas_width / page_rect.width
+        scale_y = canvas_height / page_rect.height
+        scale = min(scale_x, scale_y)
+
+        # Create a matrix for the transformation and render the page
+        mat = fitz.Matrix(scale, scale)
+        self.page_pix = page.get_pixmap(matrix=mat)
+
+        # Convert to a format suitable for Tkinter
+        img = Image.frombytes("RGB", [self.page_pix.width, self.page_pix.height], self.page_pix.samples)
+        self.photo_image = ImageTk.PhotoImage(image=img)
+        self.pdf_canvas.create_image(0, 0, image=self.photo_image, anchor='nw')
+        self.pdf_canvas.config(scrollregion=(0, 0, self.page_pix.width, self.page_pix.height))
+
+    def goto_next_page(self):
+        if self.current_page_number < len(self.doc) - 1:
+            self.current_page_number += 1
+            self.display_page(self.current_page_number)
+
+    def goto_previous_page(self):
+        if self.current_page_number > 0:
+            self.current_page_number -= 1
+            self.display_page(self.current_page_number)
+
+    def update_buttons(self):
+        # Enable or disable buttons based on the current page
+        self.prev_button['state'] = 'normal' if self.current_page_number > 0 else 'disabled'
+        self.next_button['state'] = 'normal' if self.current_page_number < len(self.doc) - 1 else 'disabled'
+
+    def on_canvas_resize(self, event):
+        if hasattr(self, 'doc'):
+            self.display_page(self.current_page_number)
 
 def main():
     root = tk.Tk()
