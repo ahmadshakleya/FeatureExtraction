@@ -11,7 +11,6 @@ import fitz  # PyMuPDF
 from tryouts.Ken.FeatureDetectionFunction import process_image_with_keypoints
 
 # Importing the required modules
-from gui_files.gui_FileTab import FileTab
 from gui_files.gui_ViewTab import ViewTab
 from gui_files.gui_InsertTab import InsertTab
 from gui_files.gui_HelpTab import HelpTab
@@ -35,14 +34,12 @@ class App1:
         self.tab_group = ttk.Notebook(self.root)
         self.tab_group.pack(expand=1, fill="both")
 
-        self.file_tab = FileTab(self.tab_group)
         self.view_tab = ViewTab(self.tab_group)
         self.insert_tab = InsertTab(self.tab_group, self.view_tab)
         self.help_tab = HelpTab(self.tab_group)
         self.log_tab = LogTab(self.tab_group)
 
-        self.tab_group.add(self.file_tab, text='File')
-        self.tab_group.add(self.insert_tab, text='Insert')
+        self.tab_group.add(self.insert_tab, text='File')
         self.tab_group.add(self.view_tab, text='View')
         self.tab_group.add(self.help_tab, text='Help')
         self.tab_group.add(self.log_tab, text='Log')
