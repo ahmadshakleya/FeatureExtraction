@@ -14,9 +14,9 @@ class SplashScreen:
         self.root.geometry("600x400")
         center_window(self.root)
         self.image_urls = [
-            "https://github.com/ahmadshakleya/FeatureExtraction/blob/main/authors/1.jpg?raw=true",
-            "https://github.com/ahmadshakleya/FeatureExtraction/blob/main/authors/2.jpg?raw=true",
-            "https://github.com/ahmadshakleya/FeatureExtraction/blob/main/authors/3.jpg?raw=true"
+            "https://raw.githubusercontent.com/ahmadshakleya/FeatureExtraction/main/authors/1.jpg",
+            "https://raw.githubusercontent.com/ahmadshakleya/FeatureExtraction/main/authors/2.jpg",
+            "https://raw.githubusercontent.com/ahmadshakleya/FeatureExtraction/main/authors/3.jpg"
         ]
         self.local_paths = ["images/1.jpg", "authors/2.jpg", "authors/3.jpg"]
 

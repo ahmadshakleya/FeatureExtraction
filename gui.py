@@ -7,7 +7,7 @@ from tryouts.Ken.FeatureDetectionFunction import process_image_with_keypoints
 
 # Importing the required modules
 from gui_files.gui_ViewTab import ViewTab
-from gui_files.gui_InsertTab import InsertTab
+from gui_files.gui_FileTab import FileTab
 from gui_files.gui_HelpTab import HelpTab
 from gui_files.gui_LogTab import LogTab
 from gui_files.gui_utils import center_window
@@ -31,7 +31,7 @@ class App1:
         self.tab_group.pack(expand=1, fill="both")
 
         self.view_tab = ViewTab(self.tab_group)
-        self.insert_tab = InsertTab(self.tab_group, self.view_tab)
+        self.insert_tab = FileTab(self.tab_group, self.view_tab)
         self.help_tab = HelpTab(self.tab_group)
         self.log_tab = LogTab(self.tab_group)
         self.edit_tab = EditTab(self.tab_group)

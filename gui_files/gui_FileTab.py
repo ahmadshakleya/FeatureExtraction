@@ -13,7 +13,7 @@ from tryouts.Ken.FeatureDetectionFunction import process_image_with_keypoints
 from tryouts.Toon.featureMatcher import process_and_display_matches
 
 
-class InsertTab(ttk.Frame):
+class FileTab(ttk.Frame):
     def __init__(self, master, view_tab):
         super().__init__(master)
         self.pack(fill='both', expand=True)
