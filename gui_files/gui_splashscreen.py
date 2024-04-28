@@ -18,7 +18,7 @@ class SplashScreen:
             "https://raw.githubusercontent.com/ahmadshakleya/FeatureExtraction/main/authors/2.jpg",
             "https://raw.githubusercontent.com/ahmadshakleya/FeatureExtraction/main/authors/3.jpg"
         ]
-        self.local_paths = ["images/1.jpg", "authors/2.jpg", "authors/3.jpg"]
+        self.local_paths = ["authors/1.jpg", "authors/2.jpg", "authors/3.jpg"]
 
         self.ensure_images()  # Ensure images are downloaded and available
 

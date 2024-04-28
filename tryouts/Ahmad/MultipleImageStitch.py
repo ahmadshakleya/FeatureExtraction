@@ -2,6 +2,7 @@ import cv2
 import os
 import logging
 from stitching import Stitcher
+import time
 
 # Set up logging
 logging.basicConfig(filename='app.log', level=logging.INFO, format='%(asctime)s:%(levelname)s:%(message)s')
@@ -105,8 +106,11 @@ def save_image(path, image, scale=1.0):
         logging.error(f"Failed to save image {path}: {e}")
 
 if __name__ == "__main__":
-    folder_path = [os.path.join('images', filename) for filename in os.listdir('images')]
+    folder_path = [os.path.join('images2', filename) for filename in os.listdir('images2')]
     logging.info("Starting to load images")
+
+    start_time = time.time()  # Start timing
+
     images = load_images(folder_path, scale=0.75)
 
     logging.info("Starting to stitch images")
@@ -115,9 +119,16 @@ if __name__ == "__main__":
         "nfeatures": 1000,              # Number of features to detect.
         "matcher_type": "homography",   # Matcher type: 'homography' or 'affine'.
         "confidence_threshold": 0.3,    # Confidence threshold for determining which matches to use.
-        "try_use_gpu" : True
+        "try_use_gpu" : True,
+        "crop" : False
     }
     panorama = stitch_images(images, stitcher_settings)
+
+    load_images_time = time.time()  # Time after loading images
+
+    stitch_images_time = time.time()  # Time after stitching images
+
+    print(f"Time taken to load and stitch images: {load_images_time - start_time:.2f} seconds")
 
     if panorama is not None:
         final_scale_factor = 1.0
