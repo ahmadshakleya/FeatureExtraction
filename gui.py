@@ -18,7 +18,7 @@ class App1:
     def __init__(self, root):
         self.root = root
         self.root.withdraw()  # Hide main window during splash screen
-        self.splash = SplashScreen(self.root, self.initialize_ui, image_path="image.jpg")
+        self.splash = SplashScreen(self.root, self.initialize_ui)
 
     def initialize_ui(self): 
         """Initialize the main window UI after the splash screen closes."""
