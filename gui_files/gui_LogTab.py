@@ -1,8 +1,8 @@
 import tryouts.Ahmad.TextHandler as th
 import logging
 import tkinter as tk
-from tkinter import Toplevel, ttk
-from tkinter import filedialog, Canvas, PhotoImage, scrolledtext
+from tkinter import ttk
+from tkinter import filedialog, scrolledtext
 
 
 class LogTab(ttk.Frame):

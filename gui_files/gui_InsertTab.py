@@ -1,16 +1,13 @@
 import tkinter as tk
-from tkinter import Toplevel, ttk
-from tkinter import filedialog, Canvas, PhotoImage
+from tkinter import ttk
+from tkinter import filedialog, Canvas
 from PIL import Image, ImageTk
 import logging
 
 import numpy as np
 import tryouts.Ahmad.MultipleImageStitch as mis
-import tryouts.Ahmad.TextHandler as th
 import cv2
-import threading
 from stitching.feature_detector import FeatureDetector
-import os
 
 from tryouts.Ken.FeatureDetectionFunction import process_image_with_keypoints
 from tryouts.Toon.featureMatcher import process_and_display_matches

@@ -1,13 +1,8 @@
 import tkinter as tk
-from tkinter import Toplevel, ttk
-from tkinter import filedialog, Canvas, PhotoImage, scrolledtext
-from PIL import Image, ImageTk
+from tkinter import ttk
 import logging
-import cv2
 import tryouts.Ahmad.MultipleImageStitch as mis  # Importing your module
 import tryouts.Ahmad.TextHandler as th  # Importing your module
-import time
-import fitz  # PyMuPDF
 from tryouts.Ken.FeatureDetectionFunction import process_image_with_keypoints
 
 # Importing the required modules

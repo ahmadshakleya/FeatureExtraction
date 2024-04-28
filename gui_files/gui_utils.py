@@ -1,6 +1,3 @@
-import tkinter as tk
-import tkinter.ttk as ttk
-from PIL import Image, ImageTk
 import logging
 import tryouts.Ahmad.TextHandler as th
 

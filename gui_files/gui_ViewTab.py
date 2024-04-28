@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import ttk, filedialog, Canvas
-from PIL import Image, ImageTk
+from PIL import ImageTk
 import logging
 
 class ViewTab(ttk.Frame):

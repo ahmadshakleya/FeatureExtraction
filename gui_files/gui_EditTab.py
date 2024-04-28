@@ -1,6 +1,5 @@
 import tkinter as tk
 from tkinter import ttk, colorchooser, font
-from tkinter import simpledialog
 
 class EditTab(ttk.Frame):
     def __init__(self, master):

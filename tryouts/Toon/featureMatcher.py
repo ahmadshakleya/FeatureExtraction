@@ -1,10 +1,7 @@
 import cv2 as cv
-import numpy as np
 import logging
-from PIL import Image
 from stitching.feature_matcher import FeatureMatcher
-# Import FeatureDetector from the corresponding module
-from stitching.feature_detector import FeatureDetector, StitchingError
+from stitching.feature_detector import FeatureDetector
 
 # Set up logging
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')

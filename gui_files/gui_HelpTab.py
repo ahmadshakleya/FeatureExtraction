@@ -9,7 +9,7 @@ class HelpTab(ttk.Frame):
     def __init__(self, master):
         super().__init__(master)
         self.pack(fill='both', expand=True)
-        self.pdf_path = "docs_test.pdf"
+        self.pdf_path = "./docs/docs_test.pdf"
         self.doc = None
         self.current_page_number = 0
         self.zoom_scale = 1.0  # Default scale factor for zoom
