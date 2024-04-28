@@ -29,12 +29,12 @@ class SplashScreen(Toplevel):
         self.progress.pack(expand=True, padx=20, pady=20)
 
         # Start updating the progress bar
-        self.after(100, self.update_progress, 0)
+        self.after(10, self.update_progress, 0)
 
     def update_progress(self, value):
-        if value <= 100:
+        if value <= 10:
             self.progress['value'] = value
-            self.after(100, self.update_progress, value+1)
+            self.after(10, self.update_progress, value+1)
         else:
             self.destroy()  # Close the splash screen
             self.on_close_callback()  # Call the callback function

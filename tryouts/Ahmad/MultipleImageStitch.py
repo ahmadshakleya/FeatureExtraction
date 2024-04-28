@@ -45,29 +45,9 @@ def stitch_images(images, stitcher_settings):
         - detector (str): Type of feature detector to use ('orb', 'sift', 'brisk', 'akaze'). Determines how features are detected in images.
         - nfeatures (int): Number of features to detect. Higher numbers can improve matching but affect performance.
         - matcher_type (str): Type of matcher ('homography', 'affine') to find correspondences between features.
-        - range_width (int): Range width for matching features: higher values are more restrictive.
         - try_use_gpu (bool): Whether to try using GPU acceleration: can improve performance but may not be supported on all systems.
-        - match_conf (float): Confidence setting for matching features: higher values are more restrictive.
         - confidence_threshold (float): Threshold for determining which matches to use, impacting the subset of images that proceed to stitching: higher values are more restrictive.
-        - matches_graph_dot_file (str): File path to save the matches graph in DOT format, useful for debugging.
-        - estimator (str): Type of camera estimator: 'homography' or 'affine'.
-        - adjuster (str): Type of camera parameters adjuster: 'no', 'ray', 'affine' or 'reproj'.
-        - refinement_mask (list of bool): Mask to define parameters to adjust during camera adjustment: 'xxxxx' for all, 'xxxxo' for all but the last.
-        - wave_correct_kind (str): Type of wave correction to apply: 'horiz', 'vert', 'auto', 'no'.
-        - warper_type (str): Type of warper to use for image warping: 'plane', 'cylindrical', 'spherical', 'fisheye', 'stereographic', 'compressedPlaneA2B1', 'compressedPlaneA1.5B1', 'compressedPlanePortraitA2B1', 'compressedPlanePortraitA1.5B1', 'paniniA2B1', 'paniniA1.5B1', 'paniniPortraitA2B1', 'paniniPortraitA1.5B1', 'mercator', 'transverseMercator'
-        - low_megapix (float): Resolution for initial image resizing: higher values are more restrictive.
-        - medium_megapix (float): Resolution for intermediate image resizing: higher values are more restrictive.
-        - final_megapix (float): Resolution for final image output: higher values are more restrictive.
         - crop (bool): Whether to crop the result to the largest possible inner rectangle: can improve quality but may remove content.
-        - blend (bool): Whether to blend the final result: can improve quality but may reduce speed.
-        - compensator (str): Type of exposure compensator to use: 'no', 'gain', 'gain_blocks', 'channels', 'channels_blocks'.
-        - nr_feeds (int): Number of feed images to exposure compensator: higher values can improve quality.
-        - block_size (int): Block size for exposure compensation: higher values can improve quality.
-        - finder (str): Type of seam finder used to determine the optimal cut between images.
-        - blender_type (str): Type of blender used for combining images: 'multiband', 'feather', 'no'.
-        - blend_strength (int): Strength of blending operation: higher values are more restrictive.
-        - timelapse (bool): Whether to generate a timelapse instead of a static panorama: can improve visual quality.
-        - timelapse_prefix (str): Prefix for output files if timelapse mode is enabled: useful for organizing timelapse frames.
 
     Returns:
     - np.array or None: The stitched panorama as an array, or None if stitching fails.

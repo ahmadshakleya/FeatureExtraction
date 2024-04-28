@@ -87,9 +87,11 @@ class InsertTab(ttk.Frame):
         self.match_button.pack(pady=10, fill='x')
 
         self.match_canvas = Canvas(tab, bg='white')
-        self.match_scrollbar = ttk.Scrollbar(tab, orient="vertical", command=self.match_canvas.yview)
-        self.match_canvas.configure(yscrollcommand=self.match_scrollbar.set)
-        self.match_scrollbar.pack(side="right", fill="y")
+        self.match_scrollbar_v = ttk.Scrollbar(tab, orient="vertical", command=self.match_canvas.yview)
+        self.match_scrollbar_h = ttk.Scrollbar(tab, orient="horizontal", command=self.match_canvas.xview)
+        self.match_canvas.configure(yscrollcommand=self.match_scrollbar_v.set, xscrollcommand=self.match_scrollbar_h)
+        self.match_scrollbar_v.pack(side="right", fill="y")
+        self.match_scrollbar_h.pack(side="bottom", fill="x")
         self.match_canvas.pack(side="left", fill="both", expand=True)
 
         self.image_selector_1.bind("<<ComboboxSelected>>", self.update_match_button_state)
@@ -118,7 +120,7 @@ class InsertTab(ttk.Frame):
         selected_path_1 = self.image_selector_1.get()
         selected_path_2 = self.image_selector_2.get()
         if not selected_path_1 or not selected_path_2:
-            logging.error("Attempt to match features without selecting both images.")
+            logging.error("FILE - MATCH - Attempt to match features without selecting both images.")
             self.update_status("Select two different images to match features.")
             return
 
@@ -134,12 +136,12 @@ class InsertTab(ttk.Frame):
             matched_images = process_and_display_matches(cv_images, feature_sets, matcher_type, confidence_threshold)
             if matched_images:
                 self.display_matched_images(matched_images)
-                logging.info("Feature matching completed successfully.")
+                logging.info("FILE - MATCHER - Feature matching completed successfully.")
             else:
-                logging.warning("Feature matching did not return any results.")
+                logging.warning("FILE - MATCHER - Feature matching did not return any results.")
                 self.update_status("No matches found.")
         except Exception as e:
-            logging.error(f"Failed to match features between selected images: {str(e)}")
+            logging.error(f"FILE - MATCHER - Failed to match features between selected images: {str(e)}")
             self.update_status("Error during feature matching.")
 
 
@@ -205,6 +207,9 @@ class InsertTab(ttk.Frame):
             "crop": [False, True]
         }
 
+        # Dictionary to hold variables for each radiobutton group
+        self.stitcher_settings_vars = {key: tk.StringVar() for key in settings if isinstance(settings[key], list) and key in ["detector", "matcher_type", "try_use_gpu", "crop"]}
+
         # Scrollable frame setup
         settings_canvas = Canvas(tab, highlightthickness=0)  # Remove any border highlight
         settings_scrollbar = ttk.Scrollbar(tab, orient="vertical", command=settings_canvas.yview)
@@ -221,20 +226,16 @@ class InsertTab(ttk.Frame):
         for setting, value in settings.items():
             container = ttk.Frame(scrollable_settings_frame)
             container.pack(fill='x', padx=10, pady=2, expand=True)
-            if setting == "nfeatures":
-                ttk.Label(container, text="Amount of features to be detected:", anchor='center').pack(side='left', padx=10)
-            elif setting == "crop":
-                ttk.Label(container, text="Crop the result:", anchor='center').pack(side='left', padx=10)
-            else:
-                ttk.Label(container, text=f"{setting.replace('_', ' ').capitalize()}:", anchor='center').pack(side='left', padx=10)
+
+            ttk.Label(container, text=f"{setting.replace('_', ' ').capitalize()}:", anchor='center').pack(side='left', padx=10)
 
             if isinstance(value, list) and setting in ["detector", "matcher_type", "try_use_gpu", "crop"]:
                 frame = ttk.Frame(container)
                 frame.pack(fill='x', padx=10, pady=2)
                 for option in value:
-                    rb = ttk.Radiobutton(frame, text=str(option), value=option, variable=self.stitcher_settings[setting], command=lambda s=setting, v=option: self.update_stitcher_setting(s, v))
+                    rb = ttk.Radiobutton(frame, text=str(option), value=option, variable=self.stitcher_settings_vars[setting], command=lambda s=setting, v=option: self.update_stitcher_setting(s, v))
                     rb.pack(side='left')
-                    if value.index(option) == 0 and setting != "crop":
+                    if value.index(option) == 0:
                         rb.invoke()
             elif isinstance(value, list):
                 # Create a combobox for other list type settings
@@ -261,16 +262,20 @@ class InsertTab(ttk.Frame):
     def update_slider(self, setting, value, label):
         self.stitcher_settings[setting] = round(value, 2)
         label.config(text=f"{round(value, 2):.2f}")
-        logging.info(f"Updated setting {setting} to {round(value, 2)}")
+        logging.info(f"FILE - STITCHER - Updated setting {setting} to {round(value, 2)}")
         self.progress_bar['value'] = 0
         self.update_status("Ready to stitch!")
+        if hasattr(self, 'match_canvas'):
+            self.clear_match_results()  # Clear matcher tab when new images are selected
 
 
     def update_stitcher_setting(self, setting, value):
         self.stitcher_settings[setting] = value
-        logging.info(f"Updated setting {setting} to {value}")
+        logging.info(f"FILE - STITCHER - Updated setting {setting} to {value}")
         self.progress_bar['value'] = 0
         self.update_status("Ready to stitch!")
+        if hasattr(self, 'match_canvas'):
+            self.clear_match_results()  # Clear matcher tab when new images are selected
 
     def toggle_keypoints(self):
         self.display_keypoints = not self.display_keypoints
@@ -285,7 +290,7 @@ class InsertTab(ttk.Frame):
             self.image_paths = list(image_paths_tuple)
             if self.image_paths:
                 self.status_label.config(text=f"Selected {len(self.image_paths)} images.")
-                logging.info(f"Selected {len(self.image_paths)} images for stitching.")
+                logging.info(f"FILE - IMAGES - Selected {len(self.image_paths)} images for stitching.")
                 self.display_selected_images()
                 self.toggle_keypoints_button['state'] = tk.NORMAL
                 self.stitch_button['state'] = tk.NORMAL if len(self.image_paths) > 1 else tk.DISABLED
@@ -293,9 +298,9 @@ class InsertTab(ttk.Frame):
                 self.clear_match_results()  # Clear matcher tab when new images are selected
             else:
                 self.stitch_button['state'] = self.toggle_keypoints_button['state'] = tk.DISABLED
-                logging.info("No images were selected.")
+                logging.info("FILE - IMAGES - No images were selected.")
         except Exception as e:
-            logging.error(f"Failed to select images: {str(e)}")
+            logging.error(f"FILE - IMAGES - Failed to select images: {str(e)}")
             self.status_label.config(text="Error selecting images.")
 
 
@@ -341,12 +346,12 @@ class InsertTab(ttk.Frame):
             self.delete_button.pack_forget()
             self.selected_image_index = None
             self.status_label.config(text=f"Updated selection. {len(self.image_paths)} images remain.")
-            logging.info("Image deleted successfully.")
+            logging.info("FILE - IMAGES - Image deleted successfully.")
 
     def stitch_images_wrapper(self):
         if not self.image_paths:
             self.status_label.config(text="No images selected!")
-            logging.warning("Attempted to stitch with no images selected.")
+            logging.warning("FILE - IMAGES - Attempted to stitch with no images selected.")
             return
 
         try:
@@ -363,9 +368,9 @@ class InsertTab(ttk.Frame):
                 self.status_label.config(text="Stitching completed successfully!")
             else:
                 self.status_label.config(text="Failed to stitch images.")
-                logging.error("Stitching process failed.")
+                logging.error("FILE - IMAGES - Stitching process failed.")
         except Exception as e:
-            logging.error(f"Stitching error: {str(e)}")
+            logging.error(f"FILE - IMAGES - Stitching error: {str(e)}")
             self.status_label.config(text="Error during stitching process.")
 
 
@@ -383,4 +388,4 @@ class InsertTab(ttk.Frame):
         self.image_selector_1.set('')
         self.image_selector_2.set('')
         self.match_button['state'] = 'disabled'  # Disable the match button until new images are selected
-        logging.info("Matcher tab results and selections have been cleared.")
+        logging.info("FILE - MATCHER - Matcher tab results and selections have been cleared.")
