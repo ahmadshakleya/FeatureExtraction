@@ -8,7 +8,7 @@ class SplashScreen(Toplevel):
         super().__init__(master)
         self.on_close_callback = on_close_callback
         self.title('Loading...')
-        self.geometry('800x600')  # Adjust size to fit your image if needed
+        self.geometry('600x400')  # Adjust size to fit your image if needed
         center_window(self)  # Center the splash screen
         self.configure(bg='white')
 
@@ -29,12 +29,12 @@ class SplashScreen(Toplevel):
         self.progress.pack(expand=True, padx=20, pady=20)
 
         # Start updating the progress bar
-        self.after(10, self.update_progress, 0)
+        self.after(100, self.update_progress, 0)
 
     def update_progress(self, value):
-        if value <= 10:
+        if value <= 100:
             self.progress['value'] = value
-            self.after(10, self.update_progress, value+1)
+            self.after(100, self.update_progress, value+1)
         else:
             self.destroy()  # Close the splash screen
             self.on_close_callback()  # Call the callback function

@@ -3,12 +3,17 @@ from tkinter import Toplevel, ttk
 from tkinter import filedialog, Canvas, PhotoImage
 from PIL import Image, ImageTk
 import logging
+
+import numpy as np
 import tryouts.Ahmad.MultipleImageStitch as mis
 import tryouts.Ahmad.TextHandler as th
 import cv2
 import threading
+from stitching.feature_detector import FeatureDetector
+import os
 
 from tryouts.Ken.FeatureDetectionFunction import process_image_with_keypoints
+from tryouts.Toon.featureMatcher import process_and_display_matches
 
 
 class InsertTab(ttk.Frame):
@@ -44,8 +49,114 @@ class InsertTab(ttk.Frame):
         self.stitcher_settings_tab = ttk.Frame(self.tab_control)
         self.tab_control.add(self.stitcher_settings_tab, text='Stitcher')
         self.setup_stitcher_settings_tab(self.stitcher_settings_tab)
+
+        # Matcher settings tab
+        self.matcher_settings_tab = ttk.Frame(self.tab_control)
+        self.tab_control.add(self.matcher_settings_tab, text='Matcher')
+        self.setup_matcher_settings_tab(self.matcher_settings_tab)
+
         
         self.tab_control.pack(expand=1, fill="both")
+
+    def setup_matcher_settings_tab(self, tab):
+        ttk.Label(tab, text="Select Two Images for Matching").pack(pady=10, fill='x')
+
+        self.image_selector_1 = ttk.Combobox(tab, values=self.image_paths, state="readonly")
+        self.image_selector_1.pack(pady=5, fill='x', expand=True)
+        self.image_selector_2 = ttk.Combobox(tab, values=self.image_paths, state="readonly")
+        self.image_selector_2.pack(pady=5, fill='x', expand=True)
+
+        ttk.Label(tab, text="Matcher Type:").pack(pady=5, fill='x')
+        self.matcher_type_combobox = ttk.Combobox(tab, values=["homography", "affine"], state="readonly")
+        self.matcher_type_combobox.pack(pady=5, fill='x', expand=True)
+        self.matcher_type_combobox.set("homography")
+
+        ttk.Label(tab, text="Confidence Threshold:").pack(pady=5, fill='x')
+        slider_frame = ttk.Frame(tab)
+        slider_frame.pack(pady=10, fill='x', expand=True)
+        self.confidence_threshold_scale = ttk.Scale(slider_frame, from_=0.0, to=1.0, orient="horizontal")
+        self.confidence_threshold_scale.set(0.3)
+        self.confidence_threshold_scale.pack(side='left', fill='x', expand=True)
+        self.confidence_label = ttk.Label(slider_frame, text=f"{self.confidence_threshold_scale.get():.2f}")
+        self.confidence_label.pack(side='left', padx=10)
+
+        # Set the command for the slider after all other GUI elements are initialized
+        self.confidence_threshold_scale['command'] = self.update_confidence_label
+
+        self.match_button = ttk.Button(tab, text="Match Features", command=self.match_features, state="disabled")
+        self.match_button.pack(pady=10, fill='x')
+
+        self.match_canvas = Canvas(tab, bg='white')
+        self.match_scrollbar = ttk.Scrollbar(tab, orient="vertical", command=self.match_canvas.yview)
+        self.match_canvas.configure(yscrollcommand=self.match_scrollbar.set)
+        self.match_scrollbar.pack(side="right", fill="y")
+        self.match_canvas.pack(side="left", fill="both", expand=True)
+
+        self.image_selector_1.bind("<<ComboboxSelected>>", self.update_match_button_state)
+        self.image_selector_2.bind("<<ComboboxSelected>>", self.update_match_button_state)
+
+
+
+    def update_confidence_label(self, value):
+        """ Update the label next to the confidence threshold slider to show its current value. """
+        self.confidence_label.config(text=f"{float(value):.2f}")
+
+
+
+
+
+    def update_match_button_state(self, event=None):
+        selected_1 = self.image_selector_1.get()
+        selected_2 = self.image_selector_2.get()
+        if selected_1 and selected_2 and selected_1 != selected_2:
+            self.match_button['state'] = 'normal'
+        else:
+            self.match_button['state'] = 'disabled'
+
+
+    def match_features(self):
+        selected_path_1 = self.image_selector_1.get()
+        selected_path_2 = self.image_selector_2.get()
+        if not selected_path_1 or not selected_path_2:
+            logging.error("Attempt to match features without selecting both images.")
+            self.update_status("Select two different images to match features.")
+            return
+
+        try:
+            img1 = Image.open(selected_path_1).convert('RGB')
+            img2 = Image.open(selected_path_2).convert('RGB')
+            cv_images = [cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR) for img in [img1, img2]]
+            feature_detector = FeatureDetector(detector=self.stitcher_settings['detector'], nfeatures=self.stitcher_settings['nfeatures'])
+            feature_sets = [feature_detector.detect_features(img) for img in cv_images]
+
+            matcher_type = self.matcher_type_combobox.get()
+            confidence_threshold = self.confidence_threshold_scale.get()
+            matched_images = process_and_display_matches(cv_images, feature_sets, matcher_type, confidence_threshold)
+            if matched_images:
+                self.display_matched_images(matched_images)
+                logging.info("Feature matching completed successfully.")
+            else:
+                logging.warning("Feature matching did not return any results.")
+                self.update_status("No matches found.")
+        except Exception as e:
+            logging.error(f"Failed to match features between selected images: {str(e)}")
+            self.update_status("Error during feature matching.")
+
+
+
+    def display_matched_images(self, matched_images):
+        # Clear existing images
+        self.match_canvas.delete("all")
+
+        y_position = 0
+        for img in matched_images:
+            tk_img = ImageTk.PhotoImage(Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB)))
+            self.match_canvas.create_image(0, y_position, image=tk_img, anchor='nw')
+            y_position += tk_img.height() + 10  # Adjust spacing between images
+            self.match_canvas.image = tk_img  # Retain a reference
+
+        self.match_canvas.config(scrollregion=self.match_canvas.bbox("all"))
+
 
     def setup_existing_code_tab(self, tab):
         ttk.Button(tab, text="Select Images", command=self.select_images).pack(pady=10)
@@ -53,11 +164,17 @@ class InsertTab(ttk.Frame):
         self.stitch_button.pack(pady=10)
 
         self.image_canvas = Canvas(tab, bg='white')
-        self.image_scrollbar = ttk.Scrollbar(tab, orient="vertical", command=self.image_canvas.yview)
+        self.image_scrollbar_vertical = ttk.Scrollbar(tab, orient="vertical", command=self.image_canvas.yview)
+        self.image_scrollbar_horizontal = ttk.Scrollbar(tab, orient="horizontal", command=self.image_canvas.xview)
+
         self.scrollable_frame = ttk.Frame(self.image_canvas)
         self.image_scrollable_window = self.image_canvas.create_window((0, 0), window=self.scrollable_frame, anchor="nw")
-        self.image_canvas.configure(yscrollcommand=self.image_scrollbar.set)
-        self.image_scrollbar.pack(side="right", fill="y")
+        self.image_canvas.configure(yscrollcommand=self.image_scrollbar_vertical.set, xscrollcommand=self.image_scrollbar_horizontal.set)
+        # Pack the scrollbars
+        self.image_scrollbar_vertical.pack(side="right", fill="y")
+        self.image_scrollbar_horizontal.pack(side="bottom", fill="x")
+
+        # Pack the canvas
         self.image_canvas.pack(side="left", fill="both", expand=True)
 
         self.scrollable_frame.bind("<Configure>", lambda e: self.image_canvas.configure(scrollregion=self.image_canvas.bbox("all")))
@@ -93,7 +210,7 @@ class InsertTab(ttk.Frame):
         settings_scrollbar = ttk.Scrollbar(tab, orient="vertical", command=settings_canvas.yview)
         scrollable_settings_frame = ttk.Frame(settings_canvas)
 
-        settings_canvas.create_window((0, 0), window=scrollable_settings_frame, anchor="center", width=400)  # Centered window
+        settings_canvas.create_window((0, 0), window=scrollable_settings_frame, anchor="center", width=settings_canvas.winfo_reqwidth())  # Centered window
         settings_canvas.configure(yscrollcommand=settings_scrollbar.set)
         settings_scrollbar.pack(side="right", fill="y")
         settings_canvas.pack(side="left", fill="both", expand=True)
@@ -160,18 +277,36 @@ class InsertTab(ttk.Frame):
         self.display_selected_images()
 
     def select_images(self):
-        image_paths_tuple = filedialog.askopenfilenames(
-            title="Select images", filetypes=[("JPEG Files", "*.jpg;*.jpeg"), ("PNG Files", "*.png"), ("All files", "*.*")]
-        )
-        self.image_paths = list(image_paths_tuple)  # Convert tuple to list right here
-        if self.image_paths:
-            self.status_label.config(text=f"Selected {len(self.image_paths)} images.")
-            logging.info(f"Selected {len(self.image_paths)} images for stitching.")
-            self.display_selected_images()  # Refresh display to possibly include keypoints
-            self.toggle_keypoints_button['state'] = tk.NORMAL
-            self.stitch_button['state'] = tk.NORMAL if len(self.image_paths) > 1 else tk.DISABLED
-        else:
-            self.stitch_button['state'] = self.toggle_keypoints_button['state'] = tk.DISABLED
+        self.progress_bar['value'] = 0
+        try:
+            image_paths_tuple = filedialog.askopenfilenames(
+                title="Select images", filetypes=[("JPEG Files", "*.jpg;*.jpeg"), ("PNG Files", "*.png"), ("All files", "*.*")]
+            )
+            self.image_paths = list(image_paths_tuple)
+            if self.image_paths:
+                self.status_label.config(text=f"Selected {len(self.image_paths)} images.")
+                logging.info(f"Selected {len(self.image_paths)} images for stitching.")
+                self.display_selected_images()
+                self.toggle_keypoints_button['state'] = tk.NORMAL
+                self.stitch_button['state'] = tk.NORMAL if len(self.image_paths) > 1 else tk.DISABLED
+                self.update_comboboxes()
+                self.clear_match_results()  # Clear matcher tab when new images are selected
+            else:
+                self.stitch_button['state'] = self.toggle_keypoints_button['state'] = tk.DISABLED
+                logging.info("No images were selected.")
+        except Exception as e:
+            logging.error(f"Failed to select images: {str(e)}")
+            self.status_label.config(text="Error selecting images.")
+
+
+
+    def update_comboboxes(self):
+        # Update the combobox list when new images are selected
+        self.image_selector_1['values'] = self.image_paths
+        self.image_selector_2['values'] = self.image_paths
+        self.image_selector_1.set('')
+        self.image_selector_2.set('')
+
 
     def display_selected_images(self):
         for widget in self.scrollable_frame.winfo_children():
@@ -211,27 +346,28 @@ class InsertTab(ttk.Frame):
     def stitch_images_wrapper(self):
         if not self.image_paths:
             self.status_label.config(text="No images selected!")
-            logging.warning("No images selected for stitching.")
+            logging.warning("Attempted to stitch with no images selected.")
             return
 
-        images = mis.load_images(self.image_paths)
-        total_images = len(images)
-        for i, img in enumerate(images):
-            progress = ((i + 1) / total_images) * 100
-            self.update_progress(progress)
+        try:
+            images = mis.load_images(self.image_paths)
+            total_images = len(images)
+            for i, img in enumerate(images):
+                progress = ((i + 1) / total_images) * 100
+                self.update_progress(progress)
 
-        stitched = mis.stitch_images(images, self.stitcher_settings)  # Use the updated settings
-        if stitched is not None:
-            stitched = cv2.cvtColor(stitched, cv2.COLOR_BGR2RGB)
-            self.view_tab.show_image_on_canvas(Image.fromarray(stitched))
-            if self.progress_bar['value'] != 0:
+            stitched = mis.stitch_images(images, self.stitcher_settings)
+            if stitched is not None:
+                stitched = cv2.cvtColor(stitched, cv2.COLOR_BGR2RGB)
+                self.view_tab.show_image_on_canvas(Image.fromarray(stitched))
                 self.status_label.config(text="Stitching completed successfully!")
             else:
-                self.status_label.config(text="Ready to stitch!")
-            logging.info("Stitching completed successfully.")
-        else:
-            self.status_label.config(text="Failed to stitch images.")
-            logging.error("Failed to stitch images.")
+                self.status_label.config(text="Failed to stitch images.")
+                logging.error("Stitching process failed.")
+        except Exception as e:
+            logging.error(f"Stitching error: {str(e)}")
+            self.status_label.config(text="Error during stitching process.")
+
 
     def update_progress(self, progress):
         self.progress_bar['value'] = progress
@@ -240,3 +376,11 @@ class InsertTab(ttk.Frame):
     def update_status(self, message):
         self.status_label.config(text=message)
         self.update_idletasks()
+
+    def clear_match_results(self):
+        """ Clears the match results and resets the matcher tab state. """
+        self.match_canvas.delete("all")  # Clear the canvas
+        self.image_selector_1.set('')
+        self.image_selector_2.set('')
+        self.match_button['state'] = 'disabled'  # Disable the match button until new images are selected
+        logging.info("Matcher tab results and selections have been cleared.")

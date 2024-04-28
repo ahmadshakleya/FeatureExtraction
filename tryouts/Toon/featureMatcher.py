@@ -33,7 +33,7 @@ def process_and_display_matches(imgs, feature_sets, matcher_type='homography', c
 
 # Example usage:
 if __name__ == '__main__':
-    images = [cv.imread('.//images//1.jpg'), cv.imread('.//images//2.jpg')]
+    images = [cv.imread('.//images//1.jpg'), cv.imread('.//images//2.jpg'), cv.imread('.//images//3.jpg')]
     feature_detector = FeatureDetector(detector='sift', nfeatures=1000)
     feature_sets = [feature_detector.detect_features(img) for img in images] # Assuming feature_detector is defined
     matched_images = process_and_display_matches(images, feature_sets, 'affine', 0.5)
