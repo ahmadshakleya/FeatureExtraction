@@ -1,3 +1,4 @@
+
 # II-Industrial Vision Technology: Image Stitcher
 
 ## Description
@@ -15,22 +16,53 @@ This project is developed as part of the coursework for II-Industrial Vision Tec
 - Python 3.x
 - Please refer to `requirements.txt` for a list of required libraries.
 
-### Installing Dependencies
-To install the required libraries, run the following command in your terminal:
+### Setup and Installation
 
-```bash
-pip install -r requirements.txt
-```
+1. **Clone the Repository**
+   ```bash
+   git clone https://github.com/ahmadshakleya/FeatureExtraction.git
+   ```
+   
+2. **Create a Virtual Environment**
+   Navigate to the project directory and create a virtual environment:
+   ```bash
+   python -m venv venv
+   ```
+
+3. **Activate the Virtual Environment**
+   - On Windows:
+     ```bash
+     venv\Scripts\activate
+     ```
+   - On macOS and Linux:
+     ```bash
+     source venv/bin/activate
+     ```
+
+4. **Install Dependencies**
+   Install the required libraries with pip:
+   ```bash
+   pip install -r requirements.txt
+   ```
 
 ### Running the Application
-To run the image stitcher, navigate to the project directory and execute the following:
 
-```bash
-python gui.py
-```
+You have two options to run the application:
+
+- **Using Python Script:**
+  After installing dependencies, run the following command within the activated virtual environment:
+  ```bash
+  python gui.py
+  ```
+
+- **Using Executable:**
+  If you don't have python installed, simply navigate to the directory containing `gui.exe` and run it:
+  ```bash
+  ./gui.exe
+  ```
 
 ### Usage
-1. Launch the application through the command line or your IDE.
+1. Launch the application using one of the methods described above.
 2. Use the GUI to upload the images you wish to stitch.
 3. Adjust settings as necessary and click the 'Stitch Images' button.
 4. Save or view the resulting panoramic image.
