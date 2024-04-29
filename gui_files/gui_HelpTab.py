@@ -3,7 +3,7 @@ from tkinter import ttk, filedialog, Canvas, messagebox, Scrollbar
 from PIL import Image, ImageTk
 import logging
 import shutil
-import urllib.request
+import requests
 
 class HelpTab(ttk.Frame):
     def __init__(self, master):
@@ -53,16 +53,24 @@ class HelpTab(ttk.Frame):
 
         if not self.load_pdf(self.pdf_path):
             if messagebox.askyesno("Download PDF", "PDF not found locally. Download from the internet?"):
-                self.download_pdf_from_url("https://github.com/ahmadshakleya/FeatureExtraction/blob/main/docs/docs.pdf")
+                self.download_pdf_from_url("https://github.com/ahmadshakleya/FeatureExtraction/raw/main/docs/docs.pdf")
 
     def download_pdf_from_url(self, url):
         try:
-            response = urllib.request.urlopen(url)
+            response = requests.get(url, stream=True)
+            response.raise_for_status()  # Raises HTTPError for bad responses
             with open(self.pdf_path, 'wb') as f:
-                f.write(response.read())
+                for chunk in response.iter_content(chunk_size=8192):
+                    f.write(chunk)
             logging.info("HELP - PDF downloaded from the internet.")
             self.load_pdf(self.pdf_path)
             self.display_page(self.current_page_number)
+        except requests.exceptions.HTTPError as e:
+            logging.error(f"HELP - Failed to download PDF from {url}: {e}")
+            messagebox.showerror("Download Error", "Failed to download the PDF.")
+        except requests.exceptions.RequestException as e:
+            logging.error(f"HELP - Failed to download PDF from {url}: {e}")
+            messagebox.showerror("Download Error", "Failed to download the PDF.")
         except Exception as e:
             logging.error(f"HELP - Failed to download PDF from {url}: {e}")
             messagebox.showerror("Download Error", "Failed to download the PDF.")
