@@ -14,7 +14,7 @@ from gui_files.gui_utils import center_window
 from gui_files.gui_splashscreen import SplashScreen
 from gui_files.gui_EditTab import EditTab
 
-class App1:
+class ImageStitchingApp:
     def __init__(self, root):
         self.root = root
         self.root.withdraw()  # Hide main window during splash screen
@@ -23,7 +23,7 @@ class App1:
     def initialize_ui(self): 
         """Initialize the main window UI after the splash screen closes."""
         self.root.deiconify()  # Show the main window
-        self.root.title('CellBlend App')
+        self.root.title('Image Stitching App')
         self.root.geometry('600x400')
         center_window(self.root)  # Center the main window
 
@@ -46,7 +46,7 @@ class App1:
 
 def main():
     root = tk.Tk()
-    app = App1(root)
+    app = ImageStitchingApp(root)
     root.mainloop()
 
 if __name__ == "__main__":

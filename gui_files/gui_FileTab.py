@@ -80,8 +80,16 @@ class FileTab(ttk.Frame):
         # Set the command for the slider after all other GUI elements are initialized
         self.confidence_threshold_scale['command'] = self.update_confidence_label
 
-        self.match_button = ttk.Button(tab, text="Match Features", command=self.match_features, state="disabled")
-        self.match_button.pack(pady=10, fill='x')
+        # Button frame for side-by-side buttons
+        button_frame = ttk.Frame(tab)
+        button_frame.pack(pady=10, fill='x')
+
+        self.match_button = ttk.Button(button_frame, text="Match Features", command=self.match_features, state="disabled")
+        self.match_button.pack(side='left', fill='x', expand=True)
+
+        self.save_matched_image_button = ttk.Button(button_frame, text="Save Matched Image", command=self.save_matched_image)
+        self.save_matched_image_button.pack(side='left', fill='x', expand=True)
+        self.save_matched_image_button['state'] = tk.DISABLED  # Initially disabled
 
         self.match_canvas = Canvas(tab, bg='white')
         self.match_scrollbar_v = ttk.Scrollbar(tab, orient="vertical", command=self.match_canvas.yview)
@@ -112,6 +120,16 @@ class FileTab(ttk.Frame):
         else:
             self.match_button['state'] = 'disabled'
 
+    def save_matched_image(self):
+        if hasattr(self, 'matched_images') and self.matched_images:
+            save_path = filedialog.asksaveasfilename(defaultextension=".png", filetypes=[("PNG files", "*.png"), ("JPEG files", "*.jpg")])
+            if save_path:
+                cv2.imwrite(save_path, self.matched_images[0])  # Assuming the first in list is the one to save
+                self.status_label.config(text="Matched image saved successfully.")
+                logging.info(f"FILE - MATCHER - Matched image saved to {save_path}")
+            else:
+                self.status_label.config(text="Matched image not saved.")
+                logging.info("FILE - MATCHER - Matched image not saved.")
 
     def match_features(self):
         selected_path_1 = self.image_selector_1.get()
@@ -155,6 +173,8 @@ class FileTab(ttk.Frame):
             self.match_canvas.image = tk_img  # Retain a reference
 
         self.match_canvas.config(scrollregion=self.match_canvas.bbox("all"))
+        self.matched_images = matched_images  # Store matched images
+        self.save_matched_image_button['state'] = tk.NORMAL if matched_images else tk.DISABLED
 
 
     def setup_existing_code_tab(self, tab):
@@ -184,6 +204,11 @@ class FileTab(ttk.Frame):
         self.delete_button = ttk.Button(tab, text="Delete Image", command=self.delete_selected_image)
         self.delete_button.pack(pady=10)
         self.delete_button.pack_forget()
+
+        self.save_button = ttk.Button(tab, text="Save Image with Keypoints", command=self.save_image_with_keypoints)
+        self.save_button.pack(pady=10)
+        self.save_button['state'] = tk.DISABLED  # Initially disabled
+
 
         self.toggle_keypoints_button = ttk.Button(tab, text="Toggle Keypoints", command=self.toggle_keypoints, state=tk.DISABLED)
         self.toggle_keypoints_button.pack(pady=10)
@@ -277,6 +302,8 @@ class FileTab(ttk.Frame):
     def toggle_keypoints(self):
         self.display_keypoints = not self.display_keypoints
         self.display_selected_images()
+        self.check_keypoints_and_toggle_save_button()
+
 
     def select_images(self):
         self.progress_bar['value'] = 0
@@ -386,3 +413,24 @@ class FileTab(ttk.Frame):
         self.image_selector_2.set('')
         self.match_button['state'] = 'disabled'  # Disable the match button until new images are selected
         logging.info("FILE - MATCHER - Matcher tab results and selections have been cleared.")
+
+    def check_keypoints_and_toggle_save_button(self):
+        if self.display_keypoints and hasattr(self, 'selected_image_index'):
+            self.save_button['state'] = tk.NORMAL
+        else:
+            self.save_button['state'] = tk.DISABLED
+
+    def save_image_with_keypoints(self):
+        if hasattr(self, 'selected_image_index') and self.photo_images[self.selected_image_index]:
+            image_path = self.image_paths[self.selected_image_index]
+            img = Image.open(image_path)
+            img_with_keypoints = process_image_with_keypoints(img, self.stitcher_settings["detector"], draw_keypoints=True, nfeatures=self.stitcher_settings["nfeatures"])
+            save_path = filedialog.asksaveasfilename(defaultextension=".png", filetypes=[("PNG files", "*.png"), ("JPEG files", "*.jpg")])
+            if save_path:
+                img_with_keypoints.save(save_path)
+                self.status_label.config(text="Image saved with keypoints.")
+                logging.info(f"FILE - IMAGES - Image with keypoints saved to {save_path}")
+            else:
+                self.status_label.config(text="Image not saved.")
+                logging.info("FILE - IMAGES - Image not saved.")
+

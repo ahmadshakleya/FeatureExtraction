@@ -9,7 +9,7 @@ class HelpTab(ttk.Frame):
     def __init__(self, master):
         super().__init__(master)
         self.pack(fill='both', expand=True)
-        self.pdf_path = "./docs/docs_test.pdf"
+        self.pdf_path = "./docs/docs.pdf"
         self.doc = None
         self.current_page_number = 0
         self.zoom_scale = 1.0  # Default scale factor for zoom
@@ -27,7 +27,7 @@ class HelpTab(ttk.Frame):
         self.next_button = ttk.Button(button_frame, text="Next", command=self.goto_next_page)
         self.next_button.pack(side='right', padx=10)
 
-        self.download_button = ttk.Button(button_frame, text="Download PDF", command=self.download_pdf)
+        self.download_button = ttk.Button(button_frame, text="Save PDF", command=self.download_pdf)
         self.download_button.pack(side='right', padx=10)
 
         self.zoom_in_button = ttk.Button(button_frame, text="Zoom In", command=lambda: self.adjust_zoom(1.25))
@@ -53,7 +53,7 @@ class HelpTab(ttk.Frame):
 
         if not self.load_pdf(self.pdf_path):
             if messagebox.askyesno("Download PDF", "PDF not found locally. Download from the internet?"):
-                self.download_pdf_from_url("https://github.com/ahmadshakleya/FeatureExtraction/raw/main/docs_test.pdf")
+                self.download_pdf_from_url("https://github.com/ahmadshakleya/FeatureExtraction/blob/main/docs/docs.pdf")
 
     def download_pdf_from_url(self, url):
         try:

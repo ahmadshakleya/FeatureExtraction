@@ -4,8 +4,8 @@
 This project is developed as part of the coursework for II-Industrial Vision Technology. It features an advanced image stitcher that uses state-of-the-art computer vision techniques for feature detection and extraction. The image stitcher is equipped with a user-friendly graphical user interface (GUI), enabling users to effortlessly stitch multiple images to produce a seamless high-resolution panorama.
 
 ## Features
-- **Feature Detection**: Utilizes [algorithm/method] for robust feature detection.
-- **Feature Extraction**: Implements [algorithm/method] to accurately extract relevant features from images.
+- **Feature Detection**: Utilizes SIFT/ORB/AKAZE/BRISK for robust feature detection.
+- **Feature Extraction**: Implements SIFT/ORB/AKAZE/BRISK to accurately extract relevant features from images.
 - **Image Stitching**: Efficiently stitches multiple images by aligning and blending them seamlessly.
 - **Graphical User Interface**: Simple and intuitive GUI for easy operation by users of all skill levels.
 
